@@ -6,6 +6,7 @@
 // @description  Extension to add a course menu on the left side of each page for HS-Esslingen's moodle.
 // @author       HSE-Codes && Heinrian
 // @icon         https://moodle.hs-esslingen.de/moodle/theme/image.php/boost/theme/1676389471/favicon
+// @require      https://raw.githubusercontent.com/SortableJS/Sortable/master/Sortable.min.js
 // @grant        GM_log
 // @grant        GM_xmlhttpRequest
 // ==/UserScript==
@@ -27,32 +28,37 @@
         divCourseMenuHead.style.width = "100%"
         divCourseMenuHead.style.textAlign = "center"
         divCourseMenuHead.style.borderBottom = "thin solid lightgrey"
+        divCourseMenuHead.style.backgroundColor = "#193058"
 
-        let h1CourseMenuHeadContent = document.createElement("h1")
+        let h1CourseMenuHeadContent = document.createElement("a")
         h1CourseMenuHeadContent.textContent = "Meine Kurse"
         h1CourseMenuHeadContent.style.fontWeight = "bold"
+        h1CourseMenuHeadContent.style.color = "white"
+        h1CourseMenuHeadContent.style.fontSize = "2em"
 
         divCourseMenuHead.appendChild(h1CourseMenuHeadContent)
         divCourseMenu.appendChild(divCourseMenuHead)
 
         let divCourseMenuList = document.createElement("div")
         divCourseMenuList.style.overflow = "auto"
+        divCourseMenuList.setAttribute("id", "simpleList");
+        divCourseMenuList.classList.add("list-group");
         divCourseMenu.appendChild(divCourseMenuList)
 
-        function appendCourses(jsonResponse) {
-
-            for (const cours of jsonResponse.data.courses) {
+        function appendCourses(jsonCourses) {
+            for (const cours of jsonCourses) {
                 let divCourse = document.createElement("div")
                 divCourse.style.width = "100%"
                 divCourse.style.padding = "10px 0"
                 divCourse.style.borderBottom = "1px solid lightgrey"
+                divCourse.classList.add("list-group-item");
+                divCourse.setAttribute("data-id", cours.id);
                 divCourse.onmouseout = () => {
                     divCourse.style.backgroundColor = "transparent"
                 }
                 divCourse.onmouseover = () => {
                     divCourse.style.backgroundColor = "lightgrey"
                 }
-
 
                 let divCourseLink = document.createElement("a")
                 divCourseLink.href = cours.viewurl
@@ -76,14 +82,21 @@
                 "Content-Type": "application/json"
             },
             responseType: 'json',
-            onload: function(response) {
-                let json = JSON.parse(response.responseText)[0]
-                console.log(json)
+            onload: function (response) {
+                let json = JSON.parse(response.responseText)[0];
+                let jsonCourses = json.data.courses;
+
                 if (json.error === false) {
-                    appendCourses(json)
+                    if (localStorage.getItem("sorted-Ids")) {
+                        var customOrderedCoursestmp = localStorage.getItem("sorted-Ids");
+                        const customOrderedCourses = customOrderedCoursestmp.split("|");
+                        // Reorder courses loaded from moodle based on the order in localStorage
+                        jsonCourses.sort((a, b) => customOrderedCourses.indexOf(a.id.toString()) - customOrderedCourses.indexOf(b.id.toString()));
+                    }
+                    appendCourses(jsonCourses);
                 }
-            }
-        }
+            },
+        };
         //TODO; Store in localstorage as Cache
         GM_xmlhttpRequest(requestDetails);
 
@@ -118,6 +131,31 @@
         divFlexRow.appendChild(divFlexItemContent)
 
         divPageWrapper.appendChild(divFlexRow)
+
+        var el = document.getElementById("simpleList");
+        var sortable = Sortable.create(el, {
+            group: "sorted-Ids",
+            store: {
+                /**
+                 * Get the order of elements. Called once during initialization.
+                 * @param   {Sortable}  sortable
+                 * @returns {Array}
+                 */
+                get: function (sortable) {
+                    var order = localStorage.getItem(sortable.options.group.name);
+                    return order ? order.split("|") : [];
+                },
+
+                /**
+                 * Save the order of elements. Called onEnd (when the item is dropped).
+                 * @param {Sortable}  sortable
+                 */
+                set: function (sortable) {
+                    var order = sortable.toArray();
+                    localStorage.setItem(sortable.options.group.name, order.join("|"));
+                },
+            },
+        });
         
         divPageOverlay.style.left = "12%"
     }
