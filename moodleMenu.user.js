@@ -6,7 +6,7 @@
 // @description  Extension to add a course menu on the left side of each page for HS-Esslingen's moodle.
 // @author       HSE-Codes && Heinrian
 // @icon         https://moodle.hs-esslingen.de/moodle/theme/image.php/boost/theme/1676389471/favicon
-// @require      https://raw.githubusercontent.com/SortableJS/Sortable/master/Sortable.min.js
+// @require      https://raw.githubusercontent.com/SortableJS/Sortable/1.15.0/Sortable.min.js
 // @grant        GM_log
 // @grant        GM_xmlhttpRequest
 // ==/UserScript==
