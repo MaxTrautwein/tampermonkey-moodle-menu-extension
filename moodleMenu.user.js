@@ -54,7 +54,7 @@
                 divCourse.classList.add("list-group-item");
                 divCourse.setAttribute("data-id", cours.id);
                 divCourse.onmouseout = () => {
-                    divCourse.style.backgroundColor = "transparent"
+                    divCourse.style.removeProperty('background-color')
                 }
                 divCourse.onmouseover = () => {
                     divCourse.style.backgroundColor = "lightgrey"
